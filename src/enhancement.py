@@ -1,55 +1,37 @@
+# src/enhancement.py
 import cv2
 import numpy as np
 from skimage import exposure
+from metadata_handling import extract_metadata, save_metadata
 
 def enhance_image(image):
     """
-    Enhance the contrast of an image using histogram equalization.
-
-    Parameters:
-    - image: Input image (as a NumPy array)
-
-    Returns:
-    - Enhanced image (as a NumPy array)
+    Enhances the image using histogram equalization.
     """
-    # Convert image to float
     image_float = np.float32(image)
     
-    # Apply histogram equalization
-    if len(image_float.shape) == 3:  # Color image
-        # Convert to grayscale for histogram equalization
+    if len(image_float.shape) == 3:
         image_gray = cv2.cvtColor(image_float, cv2.COLOR_BGR2GRAY)
         enhanced_gray = exposure.equalize_hist(image_gray)
-        # Convert back to BGR with enhanced contrast
         enhanced_image = cv2.merge([enhanced_gray]*3)
-    else:  # Grayscale image
+    else:
         enhanced_image = exposure.equalize_hist(image_float)
     
-    # Convert back to 8-bit image
     enhanced_image = np.uint8(enhanced_image * 255)
     
     return enhanced_image
 
 def apply_retinex(image):
     """
-    Enhance the image using Multi-Scale Retinex (MSR).
-
-    Parameters:
-    - image: Input image (as a NumPy array)
-
-    Returns:
-    - Enhanced image (as a NumPy array)
+    Applies Retinex algorithm for image enhancement.
     """
-    # Convert image to float
     image = np.float32(image) + 1.0
 
-    # Convert to grayscale if the image is in color
     if len(image.shape) == 3:
         image_gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
     else:
         image_gray = image
 
-    # Apply Gaussian blur at multiple scales
     scales = [15, 80, 250]
     result = np.zeros_like(image_gray)
     
@@ -59,8 +41,26 @@ def apply_retinex(image):
         log_blurred = np.log(blurred + 1.0)
         result += log_image - log_blurred
     
-    # Normalize and convert to 8-bit image
     result = np.exp(result)
     result = np.uint8(result / np.max(result) * 255)
     
     return result
+
+def enhance_and_save(image_path):
+    """
+    Enhances the image and saves the result.
+    Also extracts and saves metadata.
+    """
+    image = cv2.imread(image_path, cv2.IMREAD_GRAYSCALE)
+    enhanced_image = enhance_image(image)
+    
+    # Save enhanced image
+    processed_image_path = image_path.replace('raw', 'processed').replace('.png', '_enhanced.png')
+    cv2.imwrite(processed_image_path, enhanced_image)
+    
+    # Extract and save metadata
+    metadata = extract_metadata(image_path)
+    metadata_path = image_path.replace('raw', 'metadata').replace('.png', '_metadata.json')
+    save_metadata(metadata, metadata_path)
+    
+    return processed_image_path

@@ -1,16 +1,11 @@
-import os
-from PyQt5.QtWidgets import (
-    QApplication, QMainWindow, QPushButton, QFileDialog, QLabel, QMessageBox, QVBoxLayout, QHBoxLayout, QWidget, QFrame, QProgressBar
-)
+# src/gui.py
+from PyQt5.QtWidgets import QApplication, QMainWindow, QPushButton, QVBoxLayout, QLabel, QFileDialog, QMessageBox, QWidget, QProgressBar
 from PyQt5.QtGui import QPixmap
 from PyQt5.QtCore import Qt
-import cv2
-import numpy as np
-from preprocessing import reduce_noise, adjust_contrast, crop_and_align
-from enhancement import enhance_image
-from advanced_denoising import apply_wavelet_denoising, deep_learning_denoising
-from psr_mapping import detect_psr_regions
-from analysis import calculate_snr, extract_features, compare_images
+from preprocessing import preprocess_and_save
+from psr_mapping import map_psr_and_save
+from advanced_denoising import denoise_and_save
+from enhancement import enhance_and_save
 
 class MainWindow(QMainWindow):
     def __init__(self):
@@ -18,84 +13,60 @@ class MainWindow(QMainWindow):
         self.setWindowTitle("Lunar Image Processing")
         self.setGeometry(100, 100, 800, 600)
 
-        # Central widget
         self.central_widget = QWidget(self)
         self.setCentralWidget(self.central_widget)
+        self.layout = QVBoxLayout(self.central_widget)
 
-        # Create a vertical layout
-        layout = QVBoxLayout(self.central_widget)
+        self.upload_button = QPushButton("Upload Image", self)
+        self.upload_button.clicked.connect(self.upload_image)
+        self.layout.addWidget(self.upload_button)
 
-        # Add image display
-        self.imageLabel = QLabel(self)
-        self.imageLabel.setFrameShape(QFrame.Box)
-        self.imageLabel.setAlignment(Qt.AlignCenter)
-        layout.addWidget(self.imageLabel)
+        self.process_button = QPushButton("Process Image", self)
+        self.process_button.clicked.connect(self.process_image)
+        self.layout.addWidget(self.process_button)
 
-        # Add control buttons in a horizontal layout
-        buttonLayout = QHBoxLayout()
-        layout.addLayout(buttonLayout)
+        self.image_label = QLabel(self)
+        self.layout.addWidget(self.image_label)
 
-        self.loadButton = QPushButton('Load Image', self)
-        self.loadButton.setToolTip('Click to load an image')
-        self.loadButton.clicked.connect(self.load_image)
-        buttonLayout.addWidget(self.loadButton)
+        self.progress_bar = QProgressBar(self)
+        self.layout.addWidget(self.progress_bar)
 
-        self.processButton = QPushButton('Process Image', self)
-        self.processButton.setToolTip('Click to process the loaded image')
-        self.processButton.clicked.connect(self.process_image)
-        buttonLayout.addWidget(self.processButton)
+        self.file_path = None
 
-        # Add a status bar
-        self.statusBar = self.statusBar()
-
-        # Add a progress bar
-        self.progressBar = QProgressBar(self)
-        self.progressBar.setRange(0, 100)
-        self.progressBar.setValue(0)
-        layout.addWidget(self.progressBar)
-
-        self.model = None  # Placeholder for AI model (can be replaced with actual model later)
-
-    def load_image(self):
+    def upload_image(self):
+        """
+        Opens a file dialog to select an image file and displays it.
+        """
         options = QFileDialog.Options()
-        filePath, _ = QFileDialog.getOpenFileName(self, "Load Image", "", "Images (*.png *.jpg);;All Files (*)", options=options)
-        if filePath:
-            self.image = cv2.imread(filePath, cv2.IMREAD_GRAYSCALE)
-            pixmap = QPixmap(filePath)
-            self.imageLabel.setPixmap(pixmap.scaled(self.imageLabel.size(), Qt.KeepAspectRatio, Qt.SmoothTransformation))
-            self.loaded_image_path = filePath  # Store the loaded image path for later use
-            self.statusBar.showMessage("Image loaded successfully.")
+        file_name, _ = QFileDialog.getOpenFileName(self, "Choose an Image File", "", "Image Files (*.png; *.jpg);;All Files (*)", options=options)
+        if file_name:
+            self.file_path = file_name
+            self.show_image(file_name)
+
+    def show_image(self, file_path):
+        """
+        Displays the selected image in the GUI.
+        """
+        pixmap = QPixmap(file_path)
+        self.image_label.setPixmap(pixmap.scaled(self.image_label.size(), Qt.KeepAspectRatio))
 
     def process_image(self):
-        if hasattr(self, 'image'):
-            try:
-                self.progressBar.setValue(20)
-                enhanced_image = enhance_image(self.image)
-                self.progressBar.setValue(50)
-                # Apply denoising
-                denoised_image = deep_learning_denoising(enhanced_image, self.model)
-                self.progressBar.setValue(80)
+        """
+        Processes the selected image and updates the GUI with the results.
+        """
+        if not self.file_path:
+            QMessageBox.warning(self, "Error", "No image file selected!")
+            return
 
-                # Path to save the enhanced image in the 'processed' directory under 'data'
-                base_dir = os.path.dirname(os.path.abspath(__file__))
-                processed_dir = os.path.join(base_dir, '..', 'data', 'processed')
-                os.makedirs(processed_dir, exist_ok=True)
-
-                # Save the enhanced image in the 'processed' directory
-                base_name = os.path.basename(self.loaded_image_path)
-                enhanced_image_path = os.path.join(processed_dir, f"{os.path.splitext(base_name)[0]}_enhanced.png")
-                cv2.imwrite(enhanced_image_path, denoised_image)
-                
-                # Display the enhanced image
-                pixmap = QPixmap(enhanced_image_path)
-                self.imageLabel.setPixmap(pixmap.scaled(self.imageLabel.size(), Qt.KeepAspectRatio, Qt.SmoothTransformation))
-                self.progressBar.setValue(100)
-                self.statusBar.showMessage("Image processing completed successfully.")
-
-            except Exception as e:
-                self.progressBar.setValue(0)
-                QMessageBox.critical(self, "Error", f"An error occurred: {e}")
-                self.statusBar.showMessage("Error during image processing.")
+        self.progress_bar.setValue(0)
+        processed_image_path = preprocess_and_save(self.file_path)
+        self.progress_bar.setValue(50)
+        psr_mapped_image_path = map_psr_and_save(processed_image_path, self.file_path)  # Use the original image as the lunar map
+        denoised_image_path = denoise_and_save(psr_mapped_image_path)
+        enhanced_image_path = enhance_and_save(denoised_image_path)
+        self.progress_bar.setValue(100)
+        self.show_image(enhanced_image_path)
+        QMessageBox.information(self, "Success", "Image processing completed!")
 
 if __name__ == "__main__":
     app = QApplication([])
