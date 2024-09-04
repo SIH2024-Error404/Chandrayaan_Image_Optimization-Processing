@@ -6,6 +6,7 @@ from preprocessing import preprocess_and_save
 from psr_mapping import map_psr_and_save
 from advanced_denoising import denoise_and_save
 from enhancement import enhance_and_save
+from segmentation import segment_image  # Import the segmentation function
 import os
 
 class MainWindow(QMainWindow):
@@ -67,13 +68,21 @@ class MainWindow(QMainWindow):
 
         self.progress_bar.setValue(0)
         processed_image_path = preprocess_and_save(self.file_path)
-        self.progress_bar.setValue(50)
+        self.progress_bar.setValue(25)
         psr_mapped_image_path = map_psr_and_save(processed_image_path, self.file_path, export_dir)  # Use the original image as the lunar map
+        self.progress_bar.setValue(50)
         denoised_image_path = denoise_and_save(psr_mapped_image_path)
+        self.progress_bar.setValue(75)
         enhanced_image_path = enhance_and_save(denoised_image_path)
+        self.progress_bar.setValue(90)
+
+        # Add segmentation step
+        segmented_image_path = os.path.join(export_dir, 'segmented_image.png')
+        segment_image(enhanced_image_path, segmented_image_path)
+        
         self.progress_bar.setValue(100)
-        self.show_image(enhanced_image_path)
-        QMessageBox.information(self, "Success", "Image processing completed!")
+        self.show_image(segmented_image_path)
+        QMessageBox.information(self, "Success", "Image processing and segmentation completed!")
 
 if __name__ == "__main__":
     app = QApplication([])
