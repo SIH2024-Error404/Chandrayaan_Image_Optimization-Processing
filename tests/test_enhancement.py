@@ -1,6 +1,7 @@
 import unittest
 from src.enhancement import enhance_image
 import cv2
+import os
 
 class TestEnhancement(unittest.TestCase):
 

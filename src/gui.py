@@ -1,11 +1,12 @@
 # src/gui.py
-from PyQt5.QtWidgets import QApplication, QMainWindow, QPushButton, QVBoxLayout, QLabel, QFileDialog, QMessageBox, QWidget, QProgressBar
+from PyQt5.QtWidgets import QApplication, QMainWindow, QPushButton, QVBoxLayout, QLabel, QFileDialog, QMessageBox, QWidget, QProgressBar, QLineEdit
 from PyQt5.QtGui import QPixmap
 from PyQt5.QtCore import Qt
 from preprocessing import preprocess_and_save
 from psr_mapping import map_psr_and_save
 from advanced_denoising import denoise_and_save
 from enhancement import enhance_and_save
+import os
 
 class MainWindow(QMainWindow):
     def __init__(self):
@@ -30,6 +31,10 @@ class MainWindow(QMainWindow):
 
         self.progress_bar = QProgressBar(self)
         self.layout.addWidget(self.progress_bar)
+
+        self.export_dir_input = QLineEdit(self)
+        self.export_dir_input.setPlaceholderText("Export Directory (optional)")
+        self.layout.addWidget(self.export_dir_input)
 
         self.file_path = None
 
@@ -58,10 +63,12 @@ class MainWindow(QMainWindow):
             QMessageBox.warning(self, "Error", "No image file selected!")
             return
 
+        export_dir = self.export_dir_input.text().strip()
+
         self.progress_bar.setValue(0)
         processed_image_path = preprocess_and_save(self.file_path)
         self.progress_bar.setValue(50)
-        psr_mapped_image_path = map_psr_and_save(processed_image_path, self.file_path)  # Use the original image as the lunar map
+        psr_mapped_image_path = map_psr_and_save(processed_image_path, self.file_path, export_dir)  # Use the original image as the lunar map
         denoised_image_path = denoise_and_save(psr_mapped_image_path)
         enhanced_image_path = enhance_and_save(denoised_image_path)
         self.progress_bar.setValue(100)
