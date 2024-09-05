@@ -1,6 +1,7 @@
 # src/advanced_denoising.py
 import cv2
 import numpy as np
+import os
 import pywt
 from metadata_handling import extract_metadata, save_metadata
 
@@ -35,16 +36,22 @@ def denoise_and_save(image_path, model=None):
     Denoises the image and saves the result.
     Also extracts and saves metadata.
     """
-    image = cv2.imread(image_path, cv2.IMREAD_GRAYSCALE)
+    if not image_path:
+        raise ValueError("Image path is None or invalid")
+
+    image = cv2.imread(image_path, cv2.IMREAD_COLOR)
+    if image is None:
+        raise FileNotFoundError(f"Image file not found at path: {image_path}")
+
     denoised_image = deep_learning_denoising(image, model)
     
-    # Save denoised image
-    processed_image_path = image_path.replace('raw', 'processed').replace('.png', '_denoised.png')
+    # Save the denoised image
+    processed_image_path = image_path.replace('raw', 'processed').replace(os.path.splitext(image_path)[1], '_denoised.png')
     cv2.imwrite(processed_image_path, denoised_image)
     
     # Extract and save metadata
     metadata = extract_metadata(image_path)
-    metadata_path = image_path.replace('raw', 'metadata').replace('.png', '_metadata.json')
+    metadata_path = image_path.replace('raw', 'metadata').replace(os.path.splitext(image_path)[1], '_metadata.json')
     save_metadata(metadata, metadata_path)
     
     return processed_image_path
