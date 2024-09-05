@@ -19,7 +19,7 @@ class LandingPage(QMainWindow):
         layout = QVBoxLayout(self.central_widget)
 
         # Set background image
-        self.set_background_image('C:/Users/OM SHAH/Desktop/PSR_Analysis_Chandrayaan2/data/raw/bg_img_landingpg.jpg')
+        self.set_background_image('src/bg_img_landingpg.jpg')
 
         # Transparent black textbox
         self.textbox = QFrame(self)
@@ -88,7 +88,7 @@ class LandingPage(QMainWindow):
 
     def resizeEvent(self, event):
         # Resize background image on window resize
-        self.set_background_image('C:/Users/OM SHAH/Desktop/PSR_Analysis_Chandrayaan2/data/raw/bg_img_landingpg.jpg')
+        self.set_background_image('src/bg_img_landingpg.jpg')
         super().resizeEvent(event)
 
 if __name__ == "__main__":
