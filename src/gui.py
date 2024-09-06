@@ -1,4 +1,3 @@
-# src/gui.py
 import sys
 from PyQt5.QtWidgets import (
     QApplication, QMainWindow, QPushButton, QLabel, QVBoxLayout, QHBoxLayout, QWidget, QFrame, QMessageBox, QTextEdit, QProgressBar, QFileDialog
@@ -9,7 +8,6 @@ from preprocessing import preprocess_and_save
 from psr_mapping import map_psr_and_save
 from advanced_denoising import denoise_and_save
 from enhancement import enhance_and_save
-from analysis import analyze_and_save  # Import analyze_and_save function
 
 class MainWindow(QMainWindow):
     def __init__(self):
@@ -75,7 +73,7 @@ class MainWindow(QMainWindow):
         # Initialize file paths
         self.file_path = None
         self.metadata_path = None
-        self.processed_image_path = None
+        self.processed_psr_mapped_path = None  # Use this to store PSR mapped image path
 
     def upload_image(self):
         """
@@ -113,34 +111,28 @@ class MainWindow(QMainWindow):
         self.progress_bar.setValue(0)
         processed_image_path = preprocess_and_save(self.file_path)
         self.progress_bar.setValue(30)
-        psr_mapped_image_path, metadata_path = map_psr_and_save(processed_image_path, self.file_path)
+        self.processed_psr_mapped_path, metadata_path = map_psr_and_save(processed_image_path, self.file_path)
         self.progress_bar.setValue(60)
-        denoised_image_path = denoise_and_save(psr_mapped_image_path)
+        denoised_image_path = denoise_and_save(self.processed_psr_mapped_path)
         self.progress_bar.setValue(90)
-        enhanced_image_path = enhance_and_save(denoised_image_path)
+        enhance_and_save(denoised_image_path)
         self.progress_bar.setValue(100)
-
-        # Analyze and save features and metadata
-        processed_image_path, metadata_path = analyze_and_save(self.file_path, enhanced_image_path)
-        
-        self.processed_image_path = enhanced_image_path
-        self.show_image(enhanced_image_path)
+        self.show_image(self.processed_psr_mapped_path)  # Show the PSR mapped image
         self.display_metadata(metadata_path)
-
         QMessageBox.information(self, "Success", "Image processing completed!")
 
     def export_image(self):
         """
-        Opens a file dialog to save the processed image.
+        Opens a file dialog to save the PSR mapped image.
         """
-        if not self.processed_image_path:
+        if not self.processed_psr_mapped_path:
             QMessageBox.warning(self, "Error", "No processed image to export!")
             return
 
         options = QFileDialog.Options()
         file_name, _ = QFileDialog.getSaveFileName(self, "Save Image File", "", "Image Files (*.png; *.jpg);;All Files (*)", options=options)
         if file_name:
-            pixmap = QPixmap(self.processed_image_path)
+            pixmap = QPixmap(self.processed_psr_mapped_path)
             pixmap.save(file_name)
             QMessageBox.information(self, "Success", f"Image exported to {file_name}")
 

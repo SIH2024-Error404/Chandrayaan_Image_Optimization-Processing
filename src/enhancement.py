@@ -36,7 +36,7 @@ def apply_retinex(image):
     result = np.zeros_like(image_gray)
     
     for scale in scales:
-        blurred = cv2.GaussianBlur(image_gray, (0, 0), scale)
+        blurred = cv2.GaussianBlur(image_gray, (5, 5), scale)
         log_image = np.log(image + 1.0)
         log_blurred = np.log(blurred + 1.0)
         result += log_image - log_blurred

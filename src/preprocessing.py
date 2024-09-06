@@ -10,7 +10,7 @@ def reduce_noise(image):
     """
     return cv2.GaussianBlur(image, (5, 5), 0)
 
-def adjust_contrast(image, alpha=1.0, beta=0):
+def adjust_contrast(image, alpha=2.0, beta=70):
     """
     Adjusts the contrast of the image.
     """
