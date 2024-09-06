@@ -5,16 +5,23 @@ import os
 import pywt
 from metadata_handling import extract_metadata, save_metadata
 
-def apply_wavelet_denoising(image, wavelet='haar', level=2):
-
+def apply_wavelet_denoising(image, wavelet='db4', level=2):
+    """
+    Applies wavelet denoising to the image using the specified wavelet.
+    """
     if len(image.shape) > 2:
         image = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
 
+    # Perform wavelet decomposition
     coeffs = pywt.wavedec2(image, wavelet, level=level, mode='per')
-    coeffs_thresholded = [coeffs[0]]
-    coeffs_thresholded += [tuple(pywt.threshold(detail, np.median(detail) / 2, mode='soft')
-                                 for detail in level_details) for level_details in coeffs[1:]]
-    return pywt.waverec2(coeffs_thresholded, wavelet)
+
+    # Apply thresholding to each detail coefficient
+    coeffs_thresholded = [coeffs[0]]  # Approximation coefficients
+    for details in coeffs[1:]:
+        coeffs_thresholded.append(tuple(pywt.threshold(detail, np.median(detail) / 2, mode='soft') for detail in details))
+    
+    # Perform wavelet reconstruction
+    return pywt.waverec2(coeffs_thresholded, wavelet, mode='per')
 
 def deep_learning_denoising(image, model=None):
     
