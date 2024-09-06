@@ -1,3 +1,4 @@
+# src/gui.py
 import sys
 from PyQt5.QtWidgets import (
     QApplication, QMainWindow, QPushButton, QLabel, QVBoxLayout, QHBoxLayout, QWidget, QFrame, QMessageBox, QTextEdit, QProgressBar, QFileDialog
@@ -8,6 +9,7 @@ from preprocessing import preprocess_and_save
 from psr_mapping import map_psr_and_save
 from advanced_denoising import denoise_and_save
 from enhancement import enhance_and_save
+from analysis import analyze_and_save  # Import analyze_and_save function
 
 class MainWindow(QMainWindow):
     def __init__(self):
@@ -117,9 +119,14 @@ class MainWindow(QMainWindow):
         self.progress_bar.setValue(90)
         enhanced_image_path = enhance_and_save(denoised_image_path)
         self.progress_bar.setValue(100)
+
+        # Analyze and save features and metadata
+        processed_image_path, metadata_path = analyze_and_save(self.file_path, enhanced_image_path)
+        
         self.processed_image_path = enhanced_image_path
         self.show_image(enhanced_image_path)
         self.display_metadata(metadata_path)
+
         QMessageBox.information(self, "Success", "Image processing completed!")
 
     def export_image(self):
