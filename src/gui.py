@@ -76,9 +76,6 @@ class MainWindow(QMainWindow):
         self.processed_psr_mapped_path = None  # Use this to store PSR mapped image path
 
     def upload_image(self):
-        """
-        Opens a file dialog to select an image file and displays it.
-        """
         options = QFileDialog.Options()
         file_name, _ = QFileDialog.getOpenFileName(self, "Choose an Image File", "", "Image Files (*.png; *.jpg; *.jpeg; *.bmp; *.tiff);;All Files (*)", options=options)
         if file_name:
@@ -86,24 +83,15 @@ class MainWindow(QMainWindow):
             self.show_image(file_name)
 
     def show_image(self, file_path):
-        """
-        Displays the selected image in the GUI.
-        """
         pixmap = QPixmap(file_path)
         self.image_label.setPixmap(pixmap.scaled(self.image_label.size(), Qt.KeepAspectRatio, Qt.SmoothTransformation))
 
     def display_metadata(self, metadata_path):
-        """
-        Displays metadata in the GUI.
-        """
         with open(metadata_path, 'r') as f:
             metadata = f.read()
         self.metadata_display.setPlainText(metadata)
 
     def process_image(self):
-        """
-        Processes the selected image and updates the GUI with the results.
-        """
         if not self.file_path:
             QMessageBox.warning(self, "Error", "No image file selected!")
             return
@@ -122,9 +110,6 @@ class MainWindow(QMainWindow):
         QMessageBox.information(self, "Success", "Image processing completed!")
 
     def export_image(self):
-        """
-        Opens a file dialog to save the PSR mapped image.
-        """
         if not self.processed_psr_mapped_path:
             QMessageBox.warning(self, "Error", "No processed image to export!")
             return

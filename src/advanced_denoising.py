@@ -6,9 +6,7 @@ import pywt
 from metadata_handling import extract_metadata, save_metadata
 
 def apply_wavelet_denoising(image, wavelet='db4', level=2):
-    """
-    Applies wavelet denoising to the image using the specified wavelet.
-    """
+
     if len(image.shape) > 2:
         image = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
 

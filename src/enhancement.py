@@ -5,9 +5,6 @@ from skimage import exposure
 from metadata_handling import extract_metadata, save_metadata
 
 def enhance_image(image):
-    """
-    Enhances the image using histogram equalization.
-    """
     image_float = np.float32(image)
     
     if len(image_float.shape) == 3:
@@ -22,9 +19,7 @@ def enhance_image(image):
     return enhanced_image
 
 def apply_retinex(image):
-    """
-    Applies Retinex algorithm for image enhancement.
-    """
+
     image = np.float32(image) + 1.0
 
     if len(image.shape) == 3:
@@ -47,10 +42,7 @@ def apply_retinex(image):
     return result
 
 def enhance_and_save(image_path):
-    """
-    Enhances the image and saves the result.
-    Also extracts and saves metadata.
-    """
+
     image = cv2.imread(image_path, cv2.IMREAD_GRAYSCALE)
     enhanced_image = enhance_image(image)
     

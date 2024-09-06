@@ -5,28 +5,19 @@ import os
 from metadata_handling import extract_metadata, save_metadata
 
 def reduce_noise(image):
-    """
-    Applies Gaussian blur to reduce noise in the image.
-    """
+
     return cv2.GaussianBlur(image, (5, 5), 0)
 
 def adjust_contrast(image, alpha=2.0, beta=70):
-    """
-    Adjusts the contrast of the image.
-    """
+
     return cv2.convertScaleAbs(image, alpha=alpha, beta=beta)
 
 def crop_and_align(image, x, y, width, height):
-    """
-    Crops and aligns the image based on the given coordinates.
-    """
+
     return image[y:y+height, x:x+width]
 
 def preprocess_and_save(image_path):
-    """
-    Preprocesses the image by reducing noise, adjusting contrast, and saving it.
-    Also extracts and saves metadata.
-    """
+
 
     if not image_path:
         raise ValueError("Image path is None or invalid")
